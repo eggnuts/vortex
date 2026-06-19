@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VORTEX | Official Minecraft Project</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Unbounded:wght@400;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #020406;
+            --bg-gradient: radial-gradient(circle at 50% 50%, #1f2937 0%, #111827 50%, #000000 100%);
+            --panel: rgba(25, 30, 41, 0.65);
+            --acc: #facc15;
+            --acc-glow: rgba(250, 204, 21, 0.25);
+            --red-acc: #ef4444;
+            --red-glow: rgba(239, 68, 68, 0.15);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --border: rgba(55, 65, 81, 0.6);
+            
+            /* Динамический базовый цвет для нашей переливашки */
+            --ambient: #facc15;
+            
+            transition: --acc 0.5s ease, --acc-glow 0.5s ease, --ambient 0.5s ease;
+        }
+
+        /* ПЛАВНЫЕ ПЕРЕЛИВЫ С УЧЕТОМ АКТИВНОЙ ВКЛАДКИ */
+        body.theme-main {
+            --acc: #facc15;
+            --ambient: #facc15;
+            --acc-glow: rgba(250, 204, 21, 0.2);
+            --bg-gradient: radial-gradient(circle at 20% 30%, rgba(250, 204, 21, 0.05) 0%, #374151 35%, #1f2937 70%, #000000 100%);
+        }
+        body.theme-rules {
+            --acc: #ef4444;
+            --ambient: #ef4444;
+            --acc-glow: rgba(239, 68, 68, 0.25);
+            --bg-gradient: radial-gradient(circle at 50% 30%, rgba(239, 68, 68, 0.06) 0%, #4b5563 30%, #111827 75%, #000000 100%);
+        }
+        body.theme-donate {
+            --acc: #a855f7;
+            --ambient: #a855f7;
+            --acc-glow: rgba(168, 85, 247, 0.2);
+            --bg-gradient: radial-gradient(circle at 80% 40%, rgba(168, 85, 247, 0.05) 0%, #374151 40%, #111827 70%, #000000 100%);
+        }
+        body.theme-contacts {
+            --acc: #10b981;
+            --ambient: #10b981;
+            --acc-glow: rgba(16, 185, 129, 0.2);
+            --bg-gradient: radial-gradient(circle at 30% 60%, rgba(16, 185, 129, 0.05) 0%, #4b5563 35%, #1f2937 75%, #000000 100%);
+        }
+
+        /* КАСТОМНЫЙ СКРОЛЛБАР СТРАНИЦЫ */
+        ::-webkit-scrollbar {
+            width: 10px;
+            background-color: var(--bg);
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.01);
+            border-left: 1px solid var(--border);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--acc);
+            border-radius: 10px;
+            border: 2px solid var(--bg);
+            box-shadow: 0 0 10px var(--acc-glow);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Space Grotesk', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ПЕРЕЛИВАЮЩЕЕСЯ ПЯТНО НА СЕТКЕ (ЗАМЕНА БЕЛОГО НА ЦВЕТ ВКЛАДКИ) */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(var(--ambient) 1px, transparent 1px),
+                linear-gradient(90deg, var(--ambient) 1px, transparent 1px);
+            background-size: 60px 60px;
+            background-position: center;
+            mask-image: radial-gradient(circle at 50% 50%, black 25%, transparent 75%);
+            -webkit-mask-image: radial-gradient(circle at 50% 50%, black 25%, transparent 75%);
+            z-index: -2;
+            pointer-events: none;
+            opacity: 0.12; /* Подкрути прозрачность под себя, чтобы сетка не била по глазам */
+            animation: cosmicHue 8s linear infinite;
+        }
+
+        /* АНИМАЦИЯ ПЕРЕЛИВАШКИ ДЛЯ КУЛИСНОГО ФОНА */
+        @keyframes cosmicHue {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 10%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-bottom: 1px solid var(--border);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: 2px;
+            cursor: pointer;
+        }
+
+        .logo span {
+            color: var(--acc);
+            text-shadow: 0 0 15px var(--acc-glow);
+            transition: color 0.5s ease;
+        }
+
+        nav {
+            display: flex;
+            gap: 35px;
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            transition: all 0.4s ease;
+            position: relative;
+            padding: 5px 0;
+            cursor: pointer;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--acc);
+            transition: width 0.3s ease, background 0.5s ease;
+            box-shadow: 0 0 8px var(--acc);
+        }
+
+        nav a:hover::after, nav a.active::after { width: 100%; }
+        nav a:hover, nav a.active { color: #fff; }
+
+        .page {
+            display: none;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            padding-top: 140px;
+            padding-bottom: 80px;
+        }
+
+        .page.active-page {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .active-page .animate-fade-up {
+            animation: fadeUpIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        .active-page .delay-1 { animation-delay: 0.1s; }
+        .active-page .delay-2 { animation-delay: 0.2s; }
+        .active-page .delay-3 { animation-delay: 0.3s; }
+        .active-page .delay-4 { animation-delay: 0.4s; }
+
+        @keyframes fadeUpIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding-bottom: 40px;
+        }
+
+        .hero-badge {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+
+        .hero h1 {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 72px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 25px;
+            letter-spacing: -2px;
+            background: linear-gradient(180deg, #fff 40%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero h1 span {
+            color: transparent;
+            -webkit-text-stroke: 1.5px var(--acc);
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 20px var(--acc-glow));
+            transition: -webkit-text-stroke 0.5s ease, filter 0.5s ease;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 20px;
+            max-width: 650px;
+            line-height: 1.6;
+            margin-bottom: 45px;
+        }
+
+        .widgets-wrapper {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .version-widget, .ip-widget {
+            display: flex;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 15px 35px;
+            align-items: center;
+            gap: 15px;
+            backdrop-filter: blur(15px);
+        }
+
+        .ip-widget {
+            cursor: pointer;
+            position: relative;
+            transition: border-color 0.3s ease, transform 0.2s;
+        }
+
+        .ip-widget:hover {
+            border-color: var(--acc);
+            transform: scale(1.02);
+        }
+
+        .v-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
+        .v-value { font-family: 'Unbounded', sans-serif; font-size: 18px; font-weight: 900; color: var(--acc); transition: color 0.5s ease; }
+
+        .copy-toast {
+            position: absolute;
+            bottom: -45px;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: #10b981;
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'Unbounded', sans-serif;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .copy-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .sections-container {
+            padding: 40px 10%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 32px;
+            margin-bottom: 50px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .section-title::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 20%; height: 60%; width: 5px;
+            background: var(--acc);
+            border-radius: 10px;
+            box-shadow: 0 0 12px var(--acc);
+            transition: background 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        .grid-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 80px;
+        }
+
+        .feat-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 40px;
+            backdrop-filter: blur(15px);
+            transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .feat-card:hover {
+            border-color: var(--acc);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px var(--acc-glow);
+        }
+
+        .feat-icon-wrapper {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        .feat-card h3 { font-family: 'Unbounded', sans-serif; font-size: 18px; margin-bottom: 15px; }
+        .feat-card p { color: var(--text-muted); font-size: 15px; line-height: 1.7; }
+
+        .rules-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            align-items: start;
+        }
+
+        .rules-column-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .rule-category-title { 
+            font-family: 'Unbounded', sans-serif; 
+            font-size: 20px; 
+            color: #fff; 
+            margin: 25px 0 10px 0; 
+            border-bottom: 1px solid rgba(255,255,255,0.08); 
+            padding-bottom: 8px;
+        }
+
+        .rule-block { 
+            background: var(--panel); 
+            border: 1px solid var(--border); 
+            border-radius: 16px; 
+            padding: 20px 24px; 
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+            backdrop-filter: blur(15px); 
+            overflow: hidden;
+        }
+
+        .rule-block:hover { 
+            border-color: var(--acc); 
+            box-shadow: 0 8px 20px var(--acc-glow);
+        }
+
+        .rule-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rule-block h3 { 
+            font-family: 'Unbounded', sans-serif; 
+            font-size: 14px; 
+            color: #fff; 
+            display: flex; 
+            gap: 12px; 
+            align-items: center; 
+        }
+        
+        .rule-block h3 span { 
+            color: var(--acc); 
+            font-weight: 900;
+            transition: color 0.5s ease;
+        }
+
+        .rule-chevron {
+            font-size: 12px;
+            color: var(--text-muted);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .rule-block-content {
+            max-height: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, margin-top 0.3s ease;
+        }
+
+        .rule-block.expanded {
+            border-color: var(--acc);
+            background: rgba(31, 41, 55, 0.8);
+        }
+
+        .rule-block.expanded .rule-chevron {
+            transform: rotate(180deg);
+            color: var(--acc);
+        }
+
+        .rule-block.expanded .rule-block-content {
+            max-height: 500px; 
+            opacity: 1;
+            visibility: visible;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .rule-block p { color: var(--text-main); font-size: 14px; line-height: 1.6; }
+        .rule-sub-list { list-style: none; margin-top: 10px; padding-left: 15px; border-left: 2px solid var(--acc); }
+        .rule-sub-list li { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+        .rule-sub-list li b { color: #10b981; }
+
+        .server-status-box { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 32px; padding: 35px; margin-bottom: 80px; backdrop-filter: blur(20px); }
+        .status-split-container { display: grid; grid-template-columns: 1fr 1fr; gap: 35px; margin-bottom: 35px; }
+        .status-avatar-img { width: 100%; height: 250px; object-fit: cover; border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.05); background: #000; }
+        .status-data-side { display: flex; flex-direction: column; justify-content: center; gap: 20px; }
+        .status-bar-mini { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); padding: 24px 30px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .status-info-row { display: flex; align-items: center; gap: 15px; }
+        .status-ping-dot { position: relative; display: flex; width: 10px; height: 10px; }
+        .status-ping-dot span { position: absolute; width: 100%; height: 100%; background: #10b981; border-radius: 50%; animation: ping 1.5s infinite; }
+        .status-core-dot { width: 10px; height: 10px; background: #10b981; border-radius: 50%; }
+        .status-lbl { font-weight: 700; font-size: 16px; color: #fff; }
+        .status-online-number { font-family: 'Unbounded', sans-serif; color: var(--acc); font-size: 20px; font-weight: 900; background: rgba(255, 255, 255, 0.02); padding: 6px 18px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08); transition: color 0.5s ease; }
+        .players-list-block { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255,255,255,0.02); border-radius: 20px; padding: 25px; }
+        .players-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; }
+        .players-list-title { font-family: 'Unbounded', sans-serif; font-size: 13px; color: #fff; letter-spacing: 1px; text-transform: uppercase; }
+        .players-list-counter { font-family: 'Unbounded', sans-serif; font-size: 12px; color: var(--acc); background: rgba(255, 255, 255, 0.04); padding: 4px 12px; border-radius: 8px; font-weight: 700; }
+        .players-heads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .player-head-tag { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 10px 16px; border-radius: 14px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+        .player-mini-avatar { width: 24px; height: 24px; background-size: cover; background-position: center; border-radius: 4px; }
+        
+        .sub-section-header { font-family: 'Unbounded', sans-serif; font-size: 24px; text-align: center; margin-bottom: 40px; display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 50px; }
+        .media-grid { display: flex; flex-wrap: wrap; gap: 30px; margin-bottom: 60px; justify-content: center; }
+        .media-card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 24px; padding: 35px 24px 28px 24px; text-align: center; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; width: 280px; backdrop-filter: blur(15px); }
+        .media-card.admin-type:hover { border-color: var(--acc); box-shadow: 0 20px 40px var(--acc-glow); transform: translateY(-8px); }
+        .skin-avatar-container { height: 130px; width: 130px; margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: center; }
+        .skin-avatar-img { width: 100px; height: 100px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); transition: transform 0.4s ease; }
+        .media-card:hover .skin-avatar-img { transform: scale(1.15) rotate(5deg); }
+        .media-platform-icon { font-size: 22px; margin-bottom: 12px; color: var(--acc); }
+        .media-name { font-family: 'Unbounded', sans-serif; font-size: 20px; font-weight: 900; margin-bottom: 6px; }
+        .media-card.admin-type:hover .media-name { color: var(--acc); }
+        .media-role { color: var(--text-muted); font-size: 13px; margin-bottom: 15px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+        .media-handle { display: inline-block; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); color: #fef08a; padding: 5px 16px; border-radius: 100px; font-size: 12px; font-family: monospace; margin-bottom: 25px; }
+        .btn-more { width: 100%; background: transparent; border: 1px solid rgba(255,255,255,0.05); color: var(--text-muted); padding: 14px; border-radius: 14px; font-family: 'Unbounded', sans-serif; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.3s; text-decoration: none; display: block; }
+        .media-card.admin-type:hover .btn-more { border-color: var(--acc); color: #fff; background: rgba(255, 255, 255, 0.02); }
+
+        .promo-banner { background: linear-gradient(90deg, rgba(168, 85, 247, 0.15) 0%, rgba(11, 15, 23, 0.6) 100%); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 20px; padding: 20px 30px; margin-bottom: 35px; display: flex; align-items: center; gap: 20px; backdrop-filter: blur(10px); }
+        .promo-icon { font-size: 28px; }
+        .promo-text h4 { font-family: 'Unbounded', sans-serif; font-size: 16px; color: #fff; margin-bottom: 4px; }
+        .promo-text p { color: var(--text-muted); font-size: 14px; }
+
+        .donate-grid-fixed { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; max-width: 1300px; margin: 0 auto; width: 100%; }
+        .donate-card-modern { background: var(--panel); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 35px 25px; text-align: center; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(180deg, rgba(255, 255, 255, 0.01) 0%, rgba(11, 15, 23, 0.5) 100%); backdrop-filter: blur(15px); }
+        .donate-card-modern:hover { border-color: var(--acc); transform: translateY(-5px); box-shadow: 0 15px 35px var(--acc-glow); }
+        .donate-card-modern.premium-style { border-color: rgba(255, 255, 255, 0.15); background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(11, 15, 23, 0.8) 100%); }
+        .donate-card-modern.premium-style:hover { border-color: var(--acc); box-shadow: 0 15px 35px var(--acc-glow); }
+        .donate-card-modern h3 { font-family: 'Unbounded', sans-serif; font-size: 20px; margin-bottom: 12px; color: #fff; }
+        .donate-price-modern { font-family: 'Unbounded', sans-serif; font-size: 18px; color: var(--acc); margin-bottom: 25px; font-weight: 900; }
+        .donate-features-modern { list-style: none; text-align: left; margin-bottom: 25px; flex-grow: 1; }
+        .donate-features-modern li { margin-bottom: 10px; color: #cbd5e1; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
+        .donate-features-modern li::before { content: '✓'; color: var(--acc); font-weight: bold; flex-shrink: 0; }
+        
+        .vortex-amount-box { margin-bottom: 20px; display: flex; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; align-items: center; justify-content: space-between; }
+        .vortex-amount-box span { font-size: 11px; color: var(--text-muted); font-weight: bold; letter-spacing: 1px; }
+        .vortex-input { width: 50%; background: transparent; border: none; color: #fff; font-family: 'Unbounded', sans-serif; font-size: 14px; text-align: right; outline: none; }
+        .btn-buy-modern { width: 100%; background: rgba(255, 255, 255, 0.04); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); padding: 14px; border-radius: 12px; font-family: 'Unbounded', sans-serif; font-size: 11px; font-weight: 900; cursor: pointer; transition: 0.3s; letter-spacing: 1px; }
+        .btn-buy-modern:hover { transform: scale(1.02); background: var(--acc); color: #020406; border-color: transparent; box-shadow: 0 10px 20px var(--acc-glow); }
+
+        .grid-contacts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
+        .contact-card { background: var(--panel); border: 1px solid var(--border); border-radius: 28px; padding: 40px; display: flex; align-items: center; gap: 30px; text-decoration: none; color: #fff; transition: 0.3s; backdrop-filter: blur(15px); }
+        .contact-card:hover { border-color: var(--acc); transform: translateX(5px); box-shadow: 0 15px 30px var(--acc-glow); }
+        .contact-icon { font-size: 40px; }
+        .contact-info h3 { font-family: 'Unbounded', sans-serif; font-size: 18px; margin-bottom: 5px; }
+        .contact-info p { color: var(--text-muted); font-size: 14px; }
+
+        .story-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 1000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
+        .story-modal-overlay.open { display: flex; opacity: 1; }
+        .story-modal-window { background: #0f172a; border: 1px solid var(--border); width: 100%; max-width: 850px; border-radius: 28px; display: grid; grid-template-columns: 1fr 1.2fr; overflow: hidden; position: relative; transform: scale(0.95); transition: transform 0.3s ease; box-shadow: 0 30px 70px rgba(0,0,0,0.8); }
+        .story-modal-window.no-socials { grid-template-columns: 0.8fr 1.2fr; }
+        .story-modal-window.no-socials .story-modal-social-row { display: none; }
+        .story-modal-overlay.open .story-modal-window { transform: scale(1); }
+        .story-modal-left { background: rgba(0,0,0,0.2); padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid rgba(255,255,255,0.03); }
+        .story-modal-avatar-frame { height: 140px; width: 140px; display: flex; align-items: center; justify-content: center; margin-bottom: 30px; }
+        .story-modal-avatar-frame img { width: 120px; height: 120px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 15px 20px rgba(0,0,0,0.6)); }
+        .story-modal-social-row { display: flex; gap: 15px; width: 100%; }
+        .story-social-btn { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; transition: 0.2s; }
+        .story-social-btn.yt:hover { background: rgba(239, 68, 68, 0.1); border-color: var(--red-acc); }
+        .story-modal-right { padding: 50px; display: flex; flex-direction: column; justify-content: center; }
+        .story-badge-profile { align-self: flex-start; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); padding: 6px 16px; border-radius: 100px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+        .story-badge-profile::before { content: '🔴'; font-size: 7px; }
+        .story-player-name { font-family: 'Unbounded', sans-serif; font-size: 44px; font-weight: 900; margin-bottom: 8px; }
+        .story-player-role { font-size: 18px; color: var(--text-muted); margin-bottom: 35px; padding-left: 15px; border-left: 2px solid rgba(255,255,255,0.1); }
+        .story-info-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 25px; }
+        .story-info-lbl { font-family: 'Unbounded', sans-serif; font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 12px; }
+        .story-info-text { color: #fff; font-size: 16px; line-height: 1.6; }
+        .story-modal-close { position: absolute; top: 25px; right: 25px; background: transparent; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; transition: 0.2s; z-index: 10; }
+        .story-modal-close:hover { color: #fff; transform: scale(1.1); }
+
+        .joke-pay-window { background: #0f172a; border: 2px solid var(--acc); box-shadow: 0 0 40px var(--acc-glow); max-width: 650px; width: 95%; border-radius: 24px; padding: 35px; text-align: center; position: relative; transform: scale(0.95); transition: 0.3s ease; }
+        .joke-pay-title { font-family: 'Unbounded', sans-serif; font-size: 22px; margin-bottom: 15px; color: #fff; }
+        .joke-pay-text { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+        .pay-nickname-block { margin-bottom: 25px; text-align: left; }
+        .pay-nickname-label { font-family: 'Unbounded', sans-serif; font-size: 11px; color: var(--acc); letter-spacing: 1px; margin-bottom: 8px; display: block; }
+        .pay-nickname-input { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); border-radius: 12px; padding: 14px; color: #fff; font-family: 'Unbounded', sans-serif; font-size: 13px; outline: none; }
+        .joke-pay-methods { display: flex; gap: 12px; flex-direction: row; }
+        .joke-pay-btn { flex: 1; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); color: #fff; padding: 15px 10px; border-radius: 12px; font-family: 'Unbounded', sans-serif; font-size: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+        .joke-pay-btn span { font-size: 18px; }
+        .joke-pay-btn:hover { border-color: var(--acc); background: rgba(255, 255, 255, 0.05); transform: translateY(-2px); }
+        .pay-error-box { margin-top: 20px; background: rgba(239, 68, 68, 0.06); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 14px 20px; display: none; align-items: center; gap: 12px; text-align: left; }
+        .pay-error-cross { color: var(--red-acc); font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 16px; }
+        .pay-error-text { color: #fca5a5; font-size: 13px; font-weight: 700; }
+        
+        .cosmic-loader-box { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+        .cosmic-loader-text { font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 18px; color: #ef4444; text-shadow: 0 0 15px rgba(239, 68, 68, 0.4); margin-bottom: 15px; }
+        .cosmic-loader-bar { width: 200px; height: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; position: relative; }
+        .cosmic-loader-progress { position: absolute; height: 100%; width: 0; background: #ef4444; box-shadow: 0 0 10px #ef4444; animation: loadProgress 3s linear forwards; }
+        @keyframes loadProgress { 0% { width: 0%; } 100% { width: 100%; } }
+
+        .receipt-window-box { background: #f4f4f0; color: #111111; border: 2px solid #b5b5b0; box-shadow: 0 20px 60px rgba(0,0,0,0.8); max-width: 440px; width: 95%; border-radius: 4px; padding: 30px 25px; position: relative; font-family: monospace; font-size: 13px; line-height: 1.5; transform: scale(0.95); transition: 0.3s ease; }
+        .receipt-window-box::before, .receipt-window-box::after { content: ''; position: absolute; left: 0; width: 100%; height: 6px; background-image: linear-gradient(135deg, transparent 50%, #f4f4f0 50%), linear-gradient(225deg, transparent 50%, #f4f4f0 50%); background-size: 10px 10px; background-repeat: repeat-x; z-index: 2; }
+        .receipt-window-box::before { top: -6px; transform: rotate(180deg); }
+        .receipt-window-box::after { bottom: -6px; }
+        .receipt-window-box .close-receipt-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.05); border: none; color: #555; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        .paper-receipt-content { text-align: left; white-space: pre-wrap; color: #1c1c1a; }
+
+        .discord-redirect-box { background: #111424; border: 2px solid #5865F2; box-shadow: 0 0 35px rgba(88, 101, 242, 0.4); max-width: 500px; width: 95%; border-radius: 24px; padding: 35px; text-align: center; position: relative; }
+        .discord-redirect-title { font-family: 'Unbounded', sans-serif; font-size: 20px; color: #fff; margin-bottom: 15px; }
+        .discord-redirect-text { color: var(--text-muted); font-size: 14px; line-height: 1.6; margin-bottom: 25px; }
+        .btn-discord-action { display: inline-block; background: #5865F2; color: #fff; padding: 14px 28px; border-radius: 12px; font-family: 'Unbounded', sans-serif; font-size: 12px; font-weight: 700; text-decoration: none; transition: 0.2s; }
+        .btn-discord-action:hover { background: #4752c4; transform: translateY(-2px); }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+        @keyframes ping { 75%, 100% { transform: scale(2.5); opacity: 0; } }
+
+        @media (max-width: 1100px) {
+            .status-split-container { grid-template-columns: 1fr; }
+            .story-modal-window { grid-template-columns: 1fr !important; }
+            .grid-features, .grid-contacts, .donate-grid-fixed, .rules-grid-layout { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 46px; }
+            header { padding: 20px 5%; }
+            nav { gap: 15px; }
+            .joke-pay-methods { flex-direction: column; }
+        }
+    </style>
+</head>
+<body class="theme-main">
+
+<div class="ambient-glow"></div>
+
+<header>
+    <div class="logo" onclick="showPage('main')">VORTEX<span>.</span></div>
+    <nav>
+        <a id="nav-main" onclick="showPage('main')" class="active">Главная</a>
+        <a id="nav-rules" onclick="showPage('rules')">Правила</a>
+        <a id="nav-donate" onclick="showPage('donate')">Донат</a>
+        <a id="nav-contacts" onclick="showPage('contacts')">Соцсети</a>
+    </nav>
+</header>
+
+<div id="page-main" class="page active-page">
+    <div class="hero animate-fade-up">
+        <div class="hero-badge">eggnuts старался</div>
+        <h1><span>VORTEX</span> SMP</h1>
+        <p>У тебя будут админки, хуинки, тёлки, срачки, тачки и Дмитрий</p>
+        
+        <div class="widgets-wrapper">
+            <div class="version-widget">
+                <div class="v-label">Версия Сервера:</div>
+                <div class="v-value">1.21.1 - 1.21.10</div>
+            </div>
+            
+            <div class="ip-widget" onclick="copyIp()">
+                <div class="v-label">АЙПИ СЕРВЕРА:</div>
+                <div class="v-value" id="server-ip">Пиздатый сервер.ru</div>
+                <div class="copy-toast" id="ip-toast">Скопировано!</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sections-container">
+        <h2 class="section-title animate-fade-up delay-1">Особенности нашего сервера</h2>
+        <div class="grid-features animate-fade-up delay-1">
+            <div class="feat-card">
+                <div class="feat-icon-wrapper">🎙️</div>
+                <h3>Simple Voice Chat</h3>
+                <p>Полноценный позиционный голосовой чат прямо в игре. Общайся с друзьями, слыша направление и расстояние.</p>
+            </div>
+            <div class="feat-card">
+                <div class="feat-icon-wrapper">⚙️</div>
+                <h3>Java Оптимизация</h3>
+                <p>Никаких лагов при работе механизмов. Сборка плагинов оптимизирована под сверхвысокие нагрузки.</p>
+            </div>
+            <div class="feat-card">
+                <div class="feat-icon-wrapper">👑</div>
+                <h3>Администрация & Отклик</h3>
+                <p>Моментальный разбор тикетов и быстрый отклик на любые проблемы игроков.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title animate-fade-up delay-2">Состояние Сервера:</h2>
+        <div class="server-status-box animate-fade-up delay-2">
+            <div class="status-split-container">
+                <img src="vortex_avatar_final.png" alt="Vortex Avatar" class="status-avatar-img">
+                <div class="status-data-side">
+                    <div class="status-bar-mini">
+                        <div class="status-info-row">
+                            <div class="status-ping-dot">
+                                <span></span>
+                                <div class="status-core-dot"></div>
+                            </div>
+                            <div class="status-lbl" id="server-status-label">Сервер включен</div>
+                        </div>
+                    </div>
+                    <div class="status-bar-mini" style="background: rgba(255, 255, 255, 0.01); border-color: rgba(255, 255, 255, 0.05);">
+                        <div class="status-info-row">
+                            <div class="status-lbl" style="color: var(--acc);">Игроков онлайн:</div>
+                        </div>
+                        <div class="status-online-number" id="online-counter" style="color: #10b981; border-color: rgba(16,185,129,0.2); background: rgba(16,185,129,0.03);">— / —</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sub-section-header animate-fade-up delay-3">👑 <span>АДМИНЫ!</span></div>
+        <div class="media-grid animate-fade-up delay-3">
+            <div class="media-card admin-type">
+                <div class="skin-avatar-container">
+                    <img src="https://minotar.net/armor/bust/eggnuts/100.png" class="skin-avatar-img" alt="eggnuts">
+                </div>
+                <div class="media-platform-icon">⚙</div>
+                <div class="media-name">eggnuts</div>
+                <div class="media-role">Написал сайт и плагины, чинит баги и отвечает на вопросы. Помогает серверу ежедневно.</div>
+                <div class="media-handle">eggnuts.dev</div>
+                <button class="btn-more" onclick="openProfile('eggnuts')">ПОДРОБНЕЕ</button>
+            </div>
+
+            <div class="media-card admin-type">
+                <div class="skin-avatar-container">
+                    <img src="https://minotar.net/armor/bust/Prorokvk/100.png" class="skin-avatar-img" alt="Prorokvk">
+                </div>
+                <div class="media-platform-icon">👑</div>
+                <div class="media-name">Prorokvk</div>
+                <div class="media-role">Администратор и контент-мейкер. Подал идею проекта, полностью оплачивает хостинг, активно пиарит и продвигает сервер.</div>
+                <div class="media-handle">prorok.main</div>
+                <button class="btn-more" onclick="openProfile('prorok_admin')">ПОДРОБНЕЕ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="page-rules" class="page">
+    <div class="sections-container">
+        <h2 class="section-title animate-fade-up">Свод Правил Сервера VORTEX</h2>
+        
+        <div class="rules-grid-layout animate-fade-up delay-1">
+            <div class="rules-column-group">
+                <div class="rule-category-title">1. Общие положения</div>
+                
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>1.1.</span> Знание правил</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Незнание правил не освобождает от ответственности и наказания.</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>1.2.</span> Вход на сервер</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Заходя на сервер, вы автоматически соглашаетесь со всеми правилами проекта.</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>1.3.</span> Права администрации</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Администрация имеет право заблокировать аккаунт навсегда без объяснения причин и без возврата вещей.</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>1.4.</span> Передача аккаунта</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Запрещено передавать свой аккаунт третьим лицам. Владелец сам несет полную ответственность за свой аккаунт.</p>
+                    </div>
+                </div>
+
+                <div class="rule-category-title">3. Правила чата и поведения</div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>3.1.</span> Нарушения в тексте</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Запрещены спам, флуд, оффтоп и чрезмерное использование Caps Lock (БОЛЬШИХ БУКВ).</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>3.2.</span> Оскорбления</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Запрещено оскорблять игроков в любой форме. Наказание: мут от 1 часа (на усмотрение администратора).</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>3.3.</span> Родственники</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Строго запрещено оскорблять или упоминать в негативном ключе родителей и близких родственников.</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>3.4.</span> Реклама</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Запрещена любая посторонняя реклама других серверов, сайтов, каналов или их упоминание.</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>3.5.</span> Конфликты</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Категорически запрещено разжигание международных, межнациональных конфликтов и расизм.</p>
+                    </div>
+                </div>
+
+                <div class="rule-category-title">5. Запрещенный софт и модификации</div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>5.1.</span> Читы</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Запрещены любые чит-клиенты, чит-моды, инжекторы и ресурспаки с X-Ray.</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>5.2.</span> Просмотр сквозь блоки</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Запрещены моды для обзора сквозь текстуры (например, FreeCam).</p>
+                        <ul class="rule-sub-list">
+                            <li><b>Разрешено:</b> Flashback, ReplayMod</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>5.3.</span> Оптимизаторы</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Запрещено использовать оптимизаторы, кроме разрешенных.</p>
+                        <ul class="rule-sub-list">
+                            <li><b>Разрешено:</b> Marloww Crystal Optimizer, Cart Optimizer</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>5.4.</span> ИИ-клиенты</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Запрещено использовать ботов и искусственный интеллект (например, Baritone).</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rules-column-group">
+                <div class="rule-category-title">2. Донат и технические сбои</div>
+                
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>2.1.</span> Статус доната</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Любая покупка на сервере является добровольным пожертвованием. Деньги за донат возврату не подлежат.</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>2.2.</span> Ошибки переводов</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Администрация не несет ответственности за ошибочные денежные переводы игрока.</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>2.3.</span> Потеря вещей при сбоях</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Администрация не обязана возвращать ресурсы, утерянные из-за лагов, вылетов или перезагрузок сервера.</p>
+                    </div>
+                </div>
+
+                <div class="rule-category-title">4. Требования к никнеймам</div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>4.1.</span> Цензура</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Игровой никнейм не должен содержать маты, оскорбления или унижения в чью-либо сторону.</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>4.2.</span> Фейк-ники</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Запрещены никнеймы, похожие на ники администрации или официальных ютуберов проекта.</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>4.3.</span> Обход ЧС</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Запрещено использовать ники, похожие на никнеймы игроков из Черного Списка (ЧС) сервера.</p>
+                    </div>
+                </div>
+
+                <div class="rule-category-title">6. Вредительство и багоюз</div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>6.1.</span> Лаг-машины</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Запрещено строить и запускать любые механизмы, вызывающие лаги на сервере.</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>6.2.</span> Атаки</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Категорически запрещены любые DDoS и DoS атаки на сервер.</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>6.3.</span> Баги и дюпы</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Запрещено использовать баги сервера, а также любые способы дюпа (копирования) предметов.</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>6.4.</span> Авто-торговля</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Запрещены любые автоматические закупщики и продавцы (Auto-buyers, Auto-sellers).</p>
+                    </div>
+                </div>
+
+                <div class="rule-category-title">7. Мультиаккаунты</div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>7.1.</span> Лимит аккаунтов</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Один игрок может иметь не более 3 аккаунтов (1 основной + 2 твинка).</p>
+                    </div>
+                </div>
+
+                <div class="rule-block" onclick="toggleRule(this)">
+                    <div class="rule-block-header">
+                        <h3><span>7.2.</span> Злоупотребление</h3>
+                        <div class="rule-chevron">▼</div>
+                    </div>
+                    <div class="rule-block-content">
+                        <p>Строго запрещено использовать дополнительные аккаунты для обхода банов или накрутки ресурсов.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="page-donate" class="page">
+    <div class="sections-container">
+        <h2 class="section-title animate-fade-up">Магазин привилегий</h2>
+        
+        <div class="promo-banner animate-fade-up">
+            <div class="promo-icon">🔥</div>
+            <div class="promo-text">
+                <h4>АКЦИЯ НА КЕЙСЫ!</h4>
+                <p>При покупке от 3-х донат-кейсов автоматически применяется прогрессивная скидка!</p>
+            </div>
+        </div>
+
+        <div class="donate-grid-fixed animate-fade-up delay-1">
+            
+            <div class="donate-card-modern">
+                <h3>Донат Кейс</h3>
+                <div class="donate-price-modern">49 ₽ / шт.</div>
+                <ul class="donate-features-modern">
+                    <li>Случайная ценная привилегия или статус.</li>
+                    <li>Повышенный коэффициент удачи при открытии.</li>
+                    <li>Моментальная отправка в ваш игровой инвентарь.</li>
+                </ul>
+                <button class="btn-buy-modern" onclick="payWithJoke('Донат Кейс', '49 ₽')">КУПИТЬ</button>
+            </div>
+
+            <div class="donate-card-modern">
+                <h3>Вортексы</h3>
+                <div class="donate-price-modern" id="vortex-price-display">100 ₽</div>
+                <div class="vortex-amount-box">
+                    <span>КОЛИЧЕСТВО:</span>
+                    <input type="number" id="vortex-count" class="vortex-input" value="100" min="1" oninput="recalcVortex()">
+                </div>
+                <ul class="donate-features-modern">
+                    <li>Внутриигровая премиум-валюта проекта.</li>
+                    <li>Фиксированный курс: 1 рубль = 1 вортекс.</li>
+                </ul>
+                <button class="btn-buy-modern" id="vortex-buy-btn" onclick="payWithJoke('Вортексы', document.getElementById('vortex-price-display').innerText)">КУПИТЬ</button>
+            </div>
+
+            <div class="donate-card-modern">
+                <h3>Монетный Ключ</h3>
+                <div class="donate-price-modern">79 ₽ / шт.</div>
+                <ul class="donate-features-modern">
+                    <li>Открывает специальный Монетный кейс.</li>
+                    <li>Шанс сорвать куш во внутриигровой валюте.</li>
+                    <li>Используй для быстрого развития экономики.</li>
+                </ul>
+                <button class="btn-buy-modern" onclick="payWithJoke('Монетный Ключ', '79 ₽')">КУПИТЬ</button>
+            </div>
+
+            <div class="donate-card-modern">
+                <h3>Титул Ключ</h3>
+                <div class="donate-price-modern">99 ₽ / шт.</div>
+                <ul class="donate-features-modern">
+                    <li>Ключ для открытия кейса с кастомными титулами.</li>
+                    <li>Выбивай редкие, светящиеся и уникальные теги.</li>
+                    <li>Выделяйся в табе и глобальном чате перед другими.</li>
+                </ul>
+                <button class="btn-buy-modern" onclick="payWithJoke('Титул Ключ', '99 ₽')">КУПИТЬ</button>
+            </div>
+
+            <div class="donate-card-modern">
+                <h3>Разбан</h3>
+                <div class="donate-price-modern">250 ₽</div>
+                <ul class="donate-features-modern">
+                    <li>Полная амнистия твоего аккаунта на сервере.</li>
+                    <li>Снятие блокировки по нику и IP-адресу.</li>
+                    <li>Второй шанс доказать, что ты можешь играть честно.</li>
+                </ul>
+                <button class="btn-buy-modern" onclick="payWithJoke('Разбан', '250 ₽')">КУПИТЬ</button>
+            </div>
+
+            <div class="donate-card-modern">
+                <h3>Размут</h3>
+                <div class="donate-price-modern">100 ₽</div>
+                <ul class="donate-features-modern">
+                    <li>Досрочное снятие любых ограничений чата.</li>
+                    <li>Возвращает возможность полноценно общаться.</li>
+                    <li>Действует моментально после активации.</li>
+                </ul>
+                <button class="btn-buy-modern" onclick="payWithJoke('Размут', '100 ₽')">КУПИТЬ</button>
+            </div>
+
+            <div class="donate-card-modern">
+                <h3>Кастомный Титул</h3>
+                <div class="donate-price-modern">149 ₽</div>
+                <ul class="donate-features-modern">
+                    <li>Покупка конкретного титула без рандома и кейсов.</li>
+                    <li>Выбери готовый вариант из списка доступных на сервере.</li>
+                    <li>Постоянный префикс, который не пропадет после вайпа.</li>
+                </ul>
+                <button class="btn-buy-modern" onclick="payWithJoke('Кастомный Титул', '149 ₽')">КУПИТЬ</button>
+            </div>
+
+            <div class="donate-card-modern premium-style">
+                <h3>Кастом Донат</h3>
+                <div class="donate-price-modern">Договорная</div>
+                <ul class="donate-features-modern">
+                    <li>Реализация уникальных построек и баз.</li>
+                    <li>Кастомные префиксы или титулы для фракций.</li>
+                    <li>Согласование любых безумных идей напрямую с администрацией.</li>
+                </ul>
+                <button class="btn-buy-modern" onclick="payWithJoke('Кастом Донат', 'Договорная цена')">КУПИТЬ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="page-contacts" class="page">
+    <div class="sections-container">
+        <h2 class="section-title animate-fade-up">Наши соцсети</h2>
+        <div class="grid-contacts animate-fade-up delay-1">
+            <a href="https://t.me/eggnuts14" target="_blank" class="contact-card">
+                <div class="contact-icon">✈️</div>
+                <div class="contact-info">
+                    <h3>Официальный Telegram</h3>
+                    <p>Новости, анонсы ивентов и мемы от разработчиков.</p>
+                </div>
+            </a>
+            <a href="https://discord.gg/pMHbxtnEZx" target="_blank" class="contact-card style-ds">
+                <div class="contact-icon" style="color: #5865F2;">💬</div>
+                <div class="contact-info">
+                    <h3>Наш Discord Сервер</h3>
+                    <p>Основная площадка для общения, тикетов и голосовых каналов.</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- МОДАЛКИ -->
+<div class="story-modal-overlay" id="profile-modal">
+    <div class="story-modal-window" id="modal-window-box">
+        <button class="story-modal-close" onclick="closeProfile()">✕</button>
+        <div class="story-modal-left">
+            <div class="story-modal-avatar-frame">
+                <img src="" id="modal-avatar" alt="Skin">
+            </div>
+            <div class="story-modal-social-row" id="modal-socials">
+                <a href="https://youtube.com" id="modal-yt-link" target="_blank" class="story-social-btn yt">🛑 YouTube</a>
+                <a href="#" id="modal-ds-link" class="story-social-btn ds">💬 Discord</a>
+            </div>
+        </div>
+        <div class="story-modal-right">
+            <div class="story-badge-profile">Профиль игрока</div>
+            <div class="story-player-name" id="modal-name">Никнейм</div>
+            <div class="story-player-role" id="modal-role">Роль</div>
+            <div class="story-info-card">
+                <div class="story-info-lbl">ИНФОРМАЦИЯ</div>
+                <div class="story-info-text" id="modal-desc">Описание.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="story-modal-overlay" id="joke-pay-modal">
+    <div class="joke-pay-window" id="pay-main-card">
+        <button class="story-modal-close" onclick="closeJokePay()">✕</button>
+        <div id="pay-form-content">
+            <div class="joke-pay-title" id="joke-item-title">Оформление заказа</div>
+            <div class="joke-pay-text">Вы выбираете: <b id="joke-item-name" style="color:var(--acc);">Товар</b> за <b id="joke-item-cost" style="color:#10b981;">0 ₽</b>.</div>
+            <div class="pay-nickname-block">
+                <label class="pay-nickname-label" for="pay-ign">УКАЖИТЕ ВАШ ИГРОВОЙ НИК:</label>
+                <input type="text" id="pay-ign" class="pay-nickname-input" placeholder="Например: eggnuts">
+            </div>
+            <div style="text-align: left; margin-bottom: 10px; font-size: 11px; color: var(--text-muted); font-family: 'Unbounded', sans-serif;">ВЫБЕРИТЕ СПОСОБ ОПЛАТЫ:</div>
+            <div class="joke-pay-methods">
+                <button class="joke-pay-btn" onclick="processPayment('mom')"><span>💳</span>Карта мамы</button>
+                <button class="joke-pay-btn" onclick="processPayment('sbp')"><span>📲</span>СБП</button>
+                <button class="joke-pay-btn" onclick="processPayment('pigeon')"><span>🕊️</span>Голубиная почта</button>
+            </div>
+            <div class="pay-error-box" id="pay-error-display">
+                <div class="pay-error-cross">✕</div>
+                <div class="pay-error-text" id="pay-error-msg">Ошибка.</div>
+            </div>
+        </div>
+        <div class="cosmic-loader-box" id="cosmic-loader">
+            <div class="cosmic-loader-text" id="loader-text">Связь с космосом</div>
+            <div class="cosmic-loader-bar">
+                <div class="cosmic-loader-progress"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="story-modal-overlay" id="receipt-modal-overlay">
+    <div class="receipt-window-box">
+        <button class="close-receipt-btn" onclick="closeReceiptModal()">✕</button>
+        <div class="paper-receipt-content" id="paper-receipt-text"></div>
+    </div>
+</div>
+
+<div class="story-modal-overlay" id="discord-redirect-modal">
+    <div class="discord-redirect-box">
+        <div class="discord-redirect-title">🤖 Внимание, путник!</div>
+        <div class="discord-redirect-text">
+            Для настройки и завершения выдачи <b id="redirect-item-name" style="color:var(--acc);">товара</b> тебя перекидывает в наш официальный Discord проект. Пожалуйста, зайди туда, чтобы завершить процесс!
+        </div>
+        <a href="https://discord.gg/pMHbxtnEZx" target="_blank" class="btn-discord-action" onclick="finishDiscordRedirect()">ВОЙТИ В DISCORD</a>
+    </div>
+</div>
+
+<script>
+    const profilesData = {
+        eggnuts: {
+            name: 'eggnuts',
+            role: 'Кодер проекта.',
+            desc: 'Написал всю веб-часть (этот сайт) и сборку внутренних плагинов. Ежедневно занимается отслеживанием, исправлением багов ядра и закрытием вопросов игроков.',
+            ds: '_eggnuts_',
+            yt: 'https://www.youtube.com/@eggnuts14',
+            skin: 'eggnuts',
+            hideSocials: false
+        },
+        prorok_admin: {
+            name: 'Prorokvk',
+            role: 'Гл. Администратор / Контент-мейкер',
+            desc: 'Идейный вдохновитель VORTEX. Совмещает администрирование с ведением медиа-ресурсов. Берёт на себя все финансовые обязательства по аренде мощностей хостинга, а также активно пиарит и продвигает проект.',
+            skin: 'Prorokvk',
+            hideSocials: true
+        }
+    };
+
+    const modal = document.getElementById('profile-modal');
+    const modalWindow = document.getElementById('modal-window-box');
+    const jokeModal = document.getElementById('joke-pay-modal');
+    const receiptOverlay = document.getElementById('receipt-modal-overlay');
+    const discordRedirectModal = document.getElementById('discord-redirect-modal');
+
+    function toggleRule(element) {
+        element.classList.toggle('expanded');
+    }
+
+    // Изменение: в переменные добавлено автоматическое переключение акцентного цвета сетки
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(page => page.classList.remove('active-page'));
+        document.querySelectorAll('nav a').forEach(link => link.classList.remove('active'));
+
+        const targetPage = document.getElementById(`page-${pageId}`);
+        const targetLink = document.getElementById(`nav-${pageId}`);
+        
+        if (targetPage) targetPage.classList.add('active-page');
+        if (targetLink) targetLink.classList.add('active');
+
+        document.body.className = `theme-${pageId}`;
+
+        if (targetPage) {
+            targetPage.querySelectorAll('.animate-fade-up').forEach(el => {
+                el.style.animation = 'none';
+                el.offsetHeight; 
+                el.style.animation = '';
+            });
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openProfile(id) {
+        const data = profilesData[id];
+        if (!data) return;
+
+        document.getElementById('modal-name').innerText = data.name;
+        document.getElementById('modal-role').innerText = data.role;
+        document.getElementById('modal-desc').innerText = data.desc;
+        document.getElementById('modal-avatar').src = `https://minotar.net/armor/bust/${data.skin}/120.png`;
+
+        if (data.hideSocials) {
+            modalWindow.classList.add('no-socials');
+        } else {
+            modalWindow.classList.remove('no-socials');
+            document.getElementById('modal-ds-link').innerText = `💬 ${data.ds}`;
+            document.getElementById('modal-yt-link').href = data.yt;
+        }
+        modal.classList.add('open');
+    }
+
+    function closeProfile() { modal.classList.remove('open'); }
+
+    function copyIp() {
+        const ipText = document.getElementById('server-ip').innerText;
+        navigator.clipboard.writeText(ipText).then(() => {
+            const toast = document.getElementById('ip-toast');
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 2000);
+        });
+    }
+
+    let currentItemName = "";
+    let currentItemCost = "";
+
+    function payWithJoke(itemName, cost) {
+        currentItemName = itemName;
+        currentItemCost = cost;
+        document.getElementById('joke-item-name').innerText = itemName;
+        document.getElementById('joke-item-cost').innerText = cost;
+        document.getElementById('pay-ign').value = "";
+        hideError();
+        document.getElementById('pay-form-content').style.display = "block";
+        document.getElementById('cosmic-loader').style.display = "none";
+        jokeModal.classList.add('open');
+    }
+
+    function closeJokePay() { jokeModal.classList.remove('open'); }
+    function hideError() { document.getElementById('pay-error-display').style.display = "none"; }
+    
+    function showError(text) {
+        const errBox = document.getElementById('pay-error-display');
+        document.getElementById('pay-error-msg').innerText = text;
+        errBox.style.display = "flex";
+        errBox.style.animation = 'none';
+        errBox.offsetHeight; 
+        errBox.style.animation = 'shake 0.4s ease-in-out';
+    }
+
+    function processPayment(method) {
+        hideError();
+        const nickname = document.getElementById('pay-ign').value.trim();
+        if (!nickname) { showError("Укажите ваш никнейм перед выбором способа оплаты!"); return; }
+        if (/[а-яёА-ЯЁ]/.test(nickname)) { showError("В нике не должно быть русских букв"); return; }
+        if (method === 'mom') { showError("Верни маме карту"); return; } 
+        if (method === 'pigeon') { showError("Почтовые голуби задерживаются из-за плохой погоды."); return; } 
+        
+        if (method === 'sbp') {
+            document.getElementById('pay-form-content').style.display = "none";
+            document.getElementById('cosmic-loader').style.display = "flex";
+            let dotsCount = 0;
+            const loaderTextEl = document.getElementById('loader-text');
+            const dotsInterval = setInterval(() => {
+                dotsCount = (dotsCount + 1) % 4;
+                let dotsStr = "";
+                for(let i=0; i<dotsCount; i++) dotsStr += ".";
+                loaderTextEl.innerText = "Связь с космосом" + dotsStr;
+            }, 1000);
+            
+            setTimeout(() => {
+                clearInterval(dotsInterval);
+                closeJokePay();
+                generatePaperReceipt(nickname);
+            }, 3000);
+        }
+    }
+
+    function generatePaperReceipt(nickname) {
+        const now = new Date();
+        const pad = (num) => String(num).padStart(2, '0');
+        const dateTimeStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        const transactionID = "VRTX-" + Math.floor(100000 + Math.random() * 900000);
+
+        document.getElementById('paper-receipt-text').innerText = `
+=========================================
+ЧЕК: №${Math.floor(1000 + Math.random()*9000)}     
+Дата: ${dateTimeStr}
+ТРАНЗАКЦИЯ: ${transactionID}
+ПОКУПАТЕЛЬ: ${nickname}
+-----------------------------------------
+Товар: ${currentItemName}
+Цена: ${currentItemCost}
+Статус: Выдано eggnuts
+-----------------------------------------
+ИТОГ К ОПЛАТЕ: ${currentItemCost}
+СПОСОБ ОПЛАТЫ: СБП
+
+⚠️ ВНИМАНИЕ ИГРОКУ:
+Товар зачислен! Если донат не пришел в
+течение 5 минут, пожалуйста, не бейте
+Дмитрия и напишите нам в техподдержку.
+=========================================
+         СПАСИБО ЗА ПОКУПКУ,
+         Удачи на VortexSMP!
+=========================================`;
+        receiptOverlay.classList.add('open');
+    }
+
+    function closeReceiptModal() {
+        receiptOverlay.classList.remove('open');
+        if (currentItemName === "Кастом Донат" || currentItemName === "Кастомный Титул") {
+            setTimeout(() => {
+                document.getElementById('redirect-item-name').innerText = currentItemName;
+                discordRedirectModal.classList.add('open');
+                window.open("https://discord.gg/pMHbxtnEZx", "_blank");
+            }, 400);
+        }
+    }
+
+    function finishDiscordRedirect() { discordRedirectModal.classList.remove('open'); }
+
+    window.addEventListener('click', function(e) {
+        if (e.target === modal) closeProfile();
+        if (e.target === jokeModal) closeJokePay();
+        if (e.target === receiptOverlay) closeReceiptModal();
+        if (e.target === discordRedirectModal) finishDiscordRedirect();
+    });
+
+    // ═══════════════════════════════════════════════
+    //  ЖИВОЙ СТАТУС СЕРВЕРА — mcsrvstat.us
+    // ═══════════════════════════════════════════════
+    const MC_HOST = 'b2.qwertyx.host';
+    const MC_PORT = 28782;
+    const REFRESH_INTERVAL = 60000;
+
+    const pingDotSpan = document.querySelector('.status-ping-dot span');
+    const pingDotCore = document.querySelector('.status-core-dot');
+    const statusLabel = document.getElementById('server-status-label');
+    const counterEl   = document.getElementById('online-counter');
+
+    function setOffline() {
+        pingDotSpan.style.background = '#ef4444';
+        pingDotCore.style.background = '#ef4444';
+        statusLabel.textContent = 'Сервер недоступен';
+        counterEl.textContent = '0 / ?';
+        counterEl.style.color = '#ef4444';
+        counterEl.style.borderColor = 'rgba(239,68,68,0.2)';
+        counterEl.style.background  = 'rgba(239,68,68,0.03)';
+    }
+
+    async function fetchServerStatus() {
+        try {
+            const res = await fetch(`https://api.mcsrvstat.us/3/${MC_HOST}:${MC_PORT}`, { signal: AbortSignal.timeout(8000) });
+            if (!res.ok) throw new Error('bad response');
+            const data = await res.json();
+
+            if (!data.online) { setOffline(); return; }
+
+            pingDotSpan.style.background = '#10b981';
+            pingDotCore.style.background = '#10b981';
+            statusLabel.textContent = 'Сервер включен';
+
+            const online = data.players?.online ?? 0;
+            const max    = data.players?.max    ?? '?';
+            counterEl.textContent = `${online} / ${max}`;
+            counterEl.style.color = '#10b981';
+            counterEl.style.borderColor = 'rgba(16,185,129,0.2)';
+            counterEl.style.background  = 'rgba(16,185,129,0.03)';
+
+        } catch (e) {
+            setOffline();
+        }
+    }
+
+    fetchServerStatus();
+    setInterval(fetchServerStatus, REFRESH_INTERVAL);
+
+    function recalcVortex() {
+        const input = document.getElementById('vortex-count');
+        let count = parseInt(input.value);
+        if (isNaN(count) || count < 1) count = 1;
+        const finalPrice = count + " ₽";
+        document.getElementById('vortex-price-display').innerText = finalPrice;
+        document.getElementById('vortex-buy-btn').setAttribute('onclick', `payWithJoke('Вортексы', '${finalPrice}')`);
+    }
+</script>
+
+</body>
+</html>
